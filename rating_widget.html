@@ -64,8 +64,7 @@
                         if(bStarReached){
                             aStars[h].style.color = 'grey';
                         }else{
-                            //aStars[h].style.color = 'gold';
-                            aStars[h].style.color = getComputedStyle(document.body).getPropertyValue('--star-color-hover') || 'gold';
+                            aStars[h].style.color = 'gold';
                         }
                         if(aStars[h]===this){
                             bStarReached = true;

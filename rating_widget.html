@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rating Widget</title>
+    <style>
+        star-item{
+            color: grey;
+        }
+        star-item:hover{
+            color: gold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Widgets</h1>
+<h2>Rating Widget</h2>
+<rating-widget>
+    <form action="https://httpbin.org/post" method="POST">
+        <label for="rating">How satisfied are you?</label>
+        <input type="hidden" name="question" id="question" value="How satisfied are you?">
+        <input type="hidden" name="sentBy" value="HTML">
+        <input type="number" id="rating" name="rating" min="1" max="5" value="0" required>
+        <button type="submit">Submit</button>
+    </form>
+</rating-widget>
+
+<script>
+    class RatingWidget extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({mode : 'open'});
+
+            let amountOfStars = document.getElementById('rating').max;
+            if(amountOfStars > 10){
+                amountOfStars = 10;
+            }
+            if(amountOfStars < 3){
+                amountOfStars = 3;
+            }
+
+            this.shadowRoot.innerHTML = `
+                <style>
+                    star-item {
+                        color: grey;
+                        font-size: 2rem;
+                    }
+                    star-item:hover{
+                        color: gold;
+                        cursor: pointer;
+                    }
+                </style>`;
+
+            for(let i=0; i<amountOfStars; i++){
+                this.starItem = document.createElement('star-item');
+                this.starItem.innerHTML = '&#9733;'
+                this.shadowRoot.appendChild(this.starItem);
+            }
+
+            let aStars = Array.from(this.shadowRoot.querySelectorAll('star-item'));
+            for(let j=0; j<aStars.length; j++){
+                aStars[j].addEventListener('mouseover', function (){
+                    let aStars = Array.from(this.parentNode.querySelectorAll('star-item'));
+                    let bStarReached = false;
+                    for(let h=0; h<aStars.length; h++){
+                        if(bStarReached){
+                            aStars[h].style.color = 'grey';
+                        }else{
+                            aStars[h].style.color = 'gold';
+                        }
+                        if(aStars[h]===this){
+                            bStarReached = true;
+                        }
+                    }
+                });
+
+                aStars[j].addEventListener('click', function(){
+                    // Change color of stars
+                    let aStars = Array.from(this.parentNode.querySelectorAll('star-item'));
+                    let bStarReached = false;
+                    let rating = 0;
+                    for(let h=0; h<aStars.length; h++){
+                        if(bStarReached){
+                            aStars[h].style.color = 'grey';
+                        }else{
+                            aStars[h].style.color = 'gold';
+                        }
+                        if(aStars[h]===this){
+                            bStarReached = true;
+                            rating = h + 1;
+                        }
+                    }
+
+                    // Show message depending on rating given
+                    if(rating/aStars.length >= 0.8){
+                        this.parentNode.innerHTML = `
+                        <p>Thanks for ${rating} star rating!</p>
+                    `
+                    }else{
+                        this.parentNode.innerHTML = `
+                        <p>Thanks for your feedback of ${rating} stars. We'll try to do better!</p>
+                    `
+                    }
+
+                    // Send rating to endpoint
+                    const formData = new URLSearchParams();
+                    formData.append('question', document.getElementById('question').value);
+                    formData.append('sentBy', 'js');
+                    formData.append('rating', rating.toString());
+
+                    const fetchConfiguration = {
+                        method: 'POST',
+                        cache: 'no-cache',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Sent-By': 'JS'
+                        },
+                        body: formData.toString()
+                    };
+
+                    fetch('https://httpbin.org/post', fetchConfiguration)
+                        .then(response => response.json())
+                        .then(data => console.log(data))
+                        .catch(error => console.error('An error occurred while sending to the server: ', error));
+                });
+            }
+        }
+    };
+
+    customElements.define('rating-widget', RatingWidget);
+</script>
+
+<h2>Current Weather</h2>
+<current-weather>
+    Current Weather Conditions Unavailable
+</current-weather>
+
+<script>
+    class WeatherWidget extends HTMLElement{
+        constructor() {
+            super();
+            this.attachShadow({mode : 'open'});
+
+            fetch('https://api.weather.gov/points/32.8328,-117.257767')
+                .then(response => response.json())
+                .then(data => {
+                    fetch(data.properties.forecast)
+                        .then(response => response.json())
+                        .then(data => {
+                            const currentTemperature = data.properties.periods[0].temperature;
+                            const shortForecast = data.properties.periods[0].shortForecast;
+                            const icon = data.properties.periods[0].icon;
+                            this.shadowRoot.innerHTML = `
+                            <style>
+                                :host{
+                                    display: flex;
+                                    flex-flow: row;
+                                    gap: 1em;
+                                    align-items: center;
+                                }
+                            </style>
+                            <img src='${icon}' alt='weather-icon'><p>${shortForecast} ${currentTemperature}°F</p>
+                            `;
+                        })
+                        .catch(error => console.error('An error occurred while sending to the server: ', error));
+                })
+                .catch(error => console.error('An error occurred while sending to the server: ', error));
+        }
+    }
+    customElements.define('current-weather', WeatherWidget);
+</script>
+
+</body>
+</html>

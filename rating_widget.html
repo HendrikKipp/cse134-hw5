@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <title>Rating Widget</title>
     <style>
-        star-item{
-            color: grey;
-        }
-        star-item:hover{
-            color: gold;
-            cursor: pointer;
+        #ratingWidget{
+            --star-color-hover: gold;
+            --star-color-default: grey;
         }
     </style>
 </head>
 <body>
 <h1>Widgets</h1>
 <h2>Rating Widget</h2>
-<rating-widget>
+<rating-widget id="ratingWidget">
     <form action="https://httpbin.org/post" method="POST">
         <label for="rating">How satisfied are you?</label>
         <input type="hidden" name="question" id="question" value="How satisfied are you?">
@@ -43,11 +40,11 @@
             this.shadowRoot.innerHTML = `
                 <style>
                     star-item {
-                        color: grey;
+                        color: var(--star-color-default, grey);
                         font-size: 2rem;
                     }
                     star-item:hover{
-                        color: gold;
+                        color: var(--star-color-hover, gold);
                         cursor: pointer;
                     }
                 </style>`;
@@ -67,7 +64,8 @@
                         if(bStarReached){
                             aStars[h].style.color = 'grey';
                         }else{
-                            aStars[h].style.color = 'gold';
+                            //aStars[h].style.color = 'gold';
+                            aStars[h].style.color = getComputedStyle(document.body).getPropertyValue('--star-color-hover') || 'gold';
                         }
                         if(aStars[h]===this){
                             bStarReached = true;
